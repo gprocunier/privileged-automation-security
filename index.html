@@ -33,29 +33,6 @@
       </header>
 
       <main class="content-grid">
-        <aside class="rail">
-          <section class="note-card">
-            <h2>What this is</h2>
-            <p>A first-person technical reflection, not a neutral platform brief.</p>
-          </section>
-          <section class="note-card">
-            <h2>Core claim</h2>
-            <p>
-              Automation should not inherit the same unconfined trust model that makes sense for a
-              human operator at a shell.
-            </p>
-          </section>
-          <section class="note-card">
-            <h2>Control planes</h2>
-            <ul>
-              <li>Endpoint policy defines the actual SELinux boundary.</li>
-              <li>FreeIPA maps identity into that boundary.</li>
-              <li>SSSD and <code>pam_selinux</code> apply it at login.</li>
-              <li>Event-Driven Ansible reacts when the boundary is crossed.</li>
-            </ul>
-          </section>
-        </aside>
-
         <div class="essay">
           <section>
             <h2>What I am arguing</h2>
