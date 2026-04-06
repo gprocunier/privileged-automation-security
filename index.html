@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Privileged Automation Security</title>
+    <meta
+      name="description"
+      content="A first-person reflection on SELinux-confined automation, FreeIPA mapping, root re-assembly, and tripwire-driven response for orchestrated environments."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="hero">
+        <p class="eyebrow">Privileged Automation Security</p>
+        <h1>SELinux-confined automation is a better trust model than unconfined orchestration.</h1>
+        <p class="lede">
+          This repository is my attempt to work through that claim in concrete terms: FreeIPA as the
+          mapping plane, SELinux as the runtime boundary, root re-assembled instead of ambient, and
+          tripwires that can trigger automated response when someone tries to break the seal.
+        </p>
+        <div class="hero-actions">
+          <a class="button primary" href="https://github.com/gprocunier/privileged-automation-security">View Repository</a>
+          <a class="button secondary" href="./README.md">Read Markdown Source</a>
+        </div>
+      </header>
+
+      <main class="content-grid">
+        <aside class="rail">
+          <section class="note-card">
+            <h2>What this is</h2>
+            <p>A first-person technical reflection, not a neutral platform brief.</p>
+          </section>
+          <section class="note-card">
+            <h2>Core claim</h2>
+            <p>
+              Automation should not inherit the same unconfined trust model that makes sense for a
+              human operator at a shell.
+            </p>
+          </section>
+          <section class="note-card">
+            <h2>Control planes</h2>
+            <ul>
+              <li>Endpoint policy defines the actual SELinux boundary.</li>
+              <li>FreeIPA maps identity into that boundary.</li>
+              <li>SSSD and <code>pam_selinux</code> apply it at login.</li>
+              <li>Event-Driven Ansible reacts when the boundary is crossed.</li>
+            </ul>
+          </section>
+        </aside>
+
+        <div class="essay">
+          <section>
+            <h2>What I am arguing</h2>
+            <p>
+              I think the default trust model for automation is wrong. On RHEL, a lot of shipped
+              software already benefits from targeted SELinux confinement, but logged-in users are
+              still unconfined by default and typically map to <code>unconfined_u</code>. That may
+              be workable for a person at a shell. I do not think it is a good default for
+              orchestration.
+            </p>
+            <p>
+              I do not want automation to inherit the same assumptions as a human operator and then
+              move faster. I want automation to start constrained, and movement out of that constraint
+              to be narrow, deliberate, and visible.
+            </p>
+            <ul class="checklist">
+              <li>The endpoint carries the actual SELinux policy.</li>
+              <li>FreeIPA maps named identities into those SELinux users and roles.</li>
+              <li>SSSD and <code>pam_selinux</code> apply that mapping at login.</li>
+              <li>Local root-equivalent powers do not imply network pivot rights.</li>
+              <li>Bypassing the boundary should be noisy enough to trigger a response.</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2>What FreeIPA actually gives me</h2>
+            <p>
+              I do not think FreeIPA is the place to author SELinux policy. I think it is the right
+              place to map identity into policy that already exists on the endpoints. FreeIPA answers
+              the question, “On this host, which SELinux user should this identity get?” It does not
+              answer, “What is the SELinux policy for this host?”
+            </p>
+            <p>
+              That is enough centralization for me. I do not need FreeIPA to become a policy engine.
+              I need it to become the place where identity lands in the right confinement at scale.
+            </p>
+            <pre class="mermaid">
+flowchart LR
+    A["Policy pipeline&lt;br/&gt;defines SELinux users, roles, domains, transitions"] --&gt; B["Managed endpoint&lt;br/&gt;policy installed locally"]
+    C["FreeIPA&lt;br/&gt;maps identity to SELinux user by host scope"] --&gt; D["SSSD + pam_selinux&lt;br/&gt;evaluates map and starts session"]
+    B --&gt; D
+    D --&gt; E["Confined session"]
+            </pre>
+          </section>
+
+          <section>
+            <h2>Why I think this matters more now</h2>
+            <p>
+              I think this needs to be understood as a response to a different class of attacker than
+              the one a lot of operational models were built around. The VoidLink reporting from Check
+              Point Research is a useful marker for that shift. They describe a cloud-first Linux
+              malware framework designed for modern infrastructure, with explicit awareness of major
+              cloud environments, Kubernetes, and Docker, plus credential harvesting for cloud and
+              version-control contexts.
+            </p>
+            <p>
+              Their report does not literally say “this is an orchestration attack framework,” and I
+              do not want to overstate it. But I do think it is a fair inference that cloud-native,
+              container-aware attacker tooling changes how I should think about automation paths,
+              control-plane hosts, and privileged identities.
+            </p>
+          </section>
+
+          <section>
+            <h2>The model I want instead</h2>
+            <p>
+              I want a small set of organization-defined SELinux users and domains for automation. I
+              want those shipped to the endpoints through a policy pipeline. I want FreeIPA to map
+              identities into them. I want the baseline role to be function-specific and narrow.
+            </p>
+            <div class="pill-row">
+              <span class="pill">ops_inventory_u</span>
+              <span class="pill">ops_backup_u</span>
+              <span class="pill">ops_patch_u</span>
+              <span class="pill">ops_deploy_u</span>
+              <span class="pill">ops_root_local_u</span>
+              <span class="pill">ops_root_networked_u</span>
+              <span class="pill">ops_breakglass_u</span>
+            </div>
+            <p>
+              I do not want one SELinux user per tool. I want a few roles that reflect function and
+              risk. I also want host scope to matter. A deployment identity should not necessarily
+              land in the same SELinux user on a build host, an application host, and a bastion.
+            </p>
+            <pre class="mermaid">
+sequenceDiagram
+    participant I as Named automation identity
+    participant H as Target host
+    participant S as SSSD + pam_selinux
+    participant F as FreeIPA or SSSD cache
+    participant P as Local SELinux policy
+
+    I-&gt;&gt;H: authenticate
+    H-&gt;&gt;S: start session
+    S-&gt;&gt;F: resolve SELinux map
+    S-&gt;&gt;P: select valid local role/domain
+    S--&gt;&gt;I: launch confined session
+            </pre>
+          </section>
+
+          <section>
+            <h2>Root re-assembly</h2>
+            <p>
+              I do not think of <code>root</code> as a single thing anymore. I think of it as a
+              bundle that can be split apart and reassembled under SELinux policy. What matters to me
+              is not EUID 0 in the abstract. What matters is which powers are actually present in the
+              SELinux domain wrapped around that process.
+            </p>
+            <p>
+              That means I want to be able to say that an automation role has local root-equivalent
+              power without automatically saying that it has arbitrary outbound networking, SSH pivot
+              rights, or access to every trust primitive on the node.
+            </p>
+            <pre class="mermaid">
+flowchart TB
+    R["Root-equivalent authority"] --&gt; L["Local file and process control"]
+    R --&gt; S["Service management"]
+    R --&gt; P["Package and label operations"]
+    R --&gt; N["Outbound network initiation"]
+    R --&gt; X["SSH pivot behavior"]
+    R --&gt; K["Access to remote trust material"]
+
+    subgraph A[What I would allow in ops_root_local_t]
+        L
+        S
+        P
+    end
+
+    subgraph B[What I would grant separately or deny]
+        N
+        X
+        K
+    end
+            </pre>
+          </section>
+
+          <section>
+            <h2>Why I would not build this around shared direct root</h2>
+            <p>
+              FreeIPA maps IdM identities. A literal shared local <code>root</code> account does not
+              fit that model cleanly. The cleaner pattern is to authenticate as a named automation
+              identity, map that identity through FreeIPA into a confined SELinux user, and transition
+              to EUID 0 only where required while preserving the SELinux confinement boundary.
+            </p>
+          </section>
+
+          <section>
+            <h2>Why this matters for Ansible</h2>
+            <p>
+              I want to be able to log into a host for automation, perform local administrative work,
+              and still deny that session the ability to become a general-purpose jump point. In the
+              model I have in mind, a host could accept a named automation identity that ends up
+              running tasks with EUID 0, but the session would still land in something like
+              <code>ops_root_local_u:ops_root_local_r:ops_root_local_t</code>.
+            </p>
+            <ul>
+              <li>Write approved configuration.</li>
+              <li>Restore or apply labels where policy allows it.</li>
+              <li>Restart approved services.</li>
+              <li>Perform approved package work.</li>
+            </ul>
+            <p>What I do not want that same session to do by default is become a networked operator from the box.</p>
+          </section>
+
+          <section>
+            <h2>Sealed policy and reboot as tripwire</h2>
+            <p>
+              I do not want to overclaim. SELinux by itself does not give me a sealed anti-tamper
+              story. On a stock RHEL system, <code>root</code> can still use
+              <code>setenforce</code>, <code>semodule</code>, or boot-time parameters such as
+              <code>enforcing=0</code> and <code>selinux=0</code> to weaken the boundary.
+            </p>
+            <p>
+              What I am proposing is stronger and more explicit than that: runtime confinement comes
+              from SELinux policy, anti-tamper value comes from treating production policy as sealed
+              state, and bypassing that seal should require a higher-friction action that is visible
+              outside the host.
+            </p>
+            <pre class="mermaid">
+flowchart TD
+    A["Compromised automation identity&lt;br/&gt;EUID 0 in confined domain"] --&gt; B{"Desired action"}
+    B --&gt;|approved local work| C["Allowed inside policy"]
+    B --&gt;|network pivot or policy bypass| D["Denied by SELinux domain"]
+    D --&gt; E{"Can it quietly break the seal?"}
+    E --&gt;|no| F["Must weaken boot state or reboot"]
+    F --&gt; G["Off-host telemetry records the event"]
+    E --&gt;|yes| H["The design failed"]
+            </pre>
+          </section>
+
+          <section>
+            <h2>Why event-driven response matters</h2>
+            <p>
+              I do not think the tripwire idea is complete if it ends at detection. If the seal-break
+              event is visible outside the host, I want the rest of the system to react to it
+              automatically. This is where Event-Driven Ansible becomes useful to me.
+            </p>
+            <ul>
+              <li>Reboot events.</li>
+              <li>Boot-state changes.</li>
+              <li>Shipped audit records.</li>
+              <li>Other off-host telemetry about policy weakening.</li>
+            </ul>
+            <p>Those should become event sources for response automation.</p>
+            <pre class="mermaid">
+flowchart LR
+    A["Managed host&lt;br/&gt;reboot / SELinux state change / audit event"] --&gt; B["Off-host telemetry&lt;br/&gt;logging, SIEM, event stream"]
+    B --&gt; C["Event-Driven Ansible&lt;br/&gt;rulebook activation"]
+    C --&gt; D{"Tripwire rule matches?"}
+    D --&gt;|yes| E["Launch response workflow"]
+    D --&gt;|no| F["Keep monitoring"]
+    E --&gt; G["Quarantine or isolate host"]
+    E --&gt; H["Disable identity or revoke access"]
+    E --&gt; I["Collect evidence or trigger remediation"]
+            </pre>
+          </section>
+
+          <section>
+            <h2>Guardrails and pilot</h2>
+            <p>If I were trying to make this real, I would hold the line on a few things.</p>
+            <ul>
+              <li>No silent fallback to <code>unconfined_u</code> for automation.</li>
+              <li>No custom policy published without enforcing-mode validation.</li>
+              <li>No new SELinux user for every tool.</li>
+              <li>No blanket transition into <code>sysadm_r:sysadm_t</code>.</li>
+              <li>No break-glass path used as normal plumbing.</li>
+            </ul>
+            <p>
+              I would pilot the design in three steps: prove identity-to-context mapping, prove a
+              confined role that can still do useful work, then prove root re-assembly without network
+              sprawl.
+            </p>
+          </section>
+
+          <section>
+            <h2>Sources</h2>
+            <ul class="sources">
+              <li><a href="https://www.freeipa.org/page/SELinux_user_mapping">FreeIPA, SELinux user mapping model and precedence</a></li>
+              <li><a href="https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/6/html/identity_management_guide/mapping-selinux">Red Hat, IdM SELinux mapping concepts</a></li>
+              <li><a href="https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/7/html/linux_domain_identity_authentication_and_policy_guide/config-selinux">Red Hat, IdM SELinux order and default behavior</a></li>
+              <li><a href="https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/7/html/selinux_users_and_administrators_guide/chap-managing_confined_services-identity_management">Red Hat, IdM and SELinux login flow with SSSD and pam_selinux</a></li>
+              <li><a href="https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/10/html/using_selinux/managing-confined-and-unconfined-users">Red Hat, confined and unconfined users including user_u, staff_u, and sysadm_u</a></li>
+              <li><a href="https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/9/html/using_selinux/changing-selinux-states-and-modes_using-selinux">Red Hat, SELinux modes and runtime state changes with setenforce</a></li>
+              <li><a href="https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/10/html/using_selinux/changing-selinux-states-and-modes">Red Hat, SELinux modes and boot-time state changes</a></li>
+              <li><a href="https://docs.redhat.com/es/documentation/red_hat_enterprise_linux/7/html/selinux_users_and_administrators_guide/security-enhanced_linux-prioritizing_selinux_modules">Red Hat, local SELinux policy override with semodule</a></li>
+              <li><a href="https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/9/html/using_selinux/managing-confined-and-unconfined-users_using-selinux">Red Hat, confined user roles and network-limited patterns such as guest_r and xguest_r</a></li>
+              <li><a href="https://access.redhat.com/documentation/en-us/red_hat_ansible_automation_platform/2.4/pdf/event-driven_ansible_controller_user_guide/red_hat_ansible_automation_platform-2.4-event-driven_ansible_controller_user_guide-en-us.pdf">Red Hat Ansible Automation Platform, Event-Driven Ansible controller</a></li>
+              <li><a href="https://research.checkpoint.com/2026/voidlink-the-cloud-native-malware-framework/">Check Point Research, VoidLink as a cloud-first Linux malware framework</a></li>
+            </ul>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: "base",
+        securityLevel: "loose",
+        themeVariables: {
+          primaryColor: "#e9dcc7",
+          primaryTextColor: "#211c17",
+          primaryBorderColor: "#4f4136",
+          lineColor: "#4f4136",
+          secondaryColor: "#f4ead9",
+          tertiaryColor: "#fffaf2",
+          fontFamily: "IBM Plex Sans"
+        }
+      });
+    </script>
+  </body>
+</html>

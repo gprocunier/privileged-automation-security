@@ -1,0 +1,250 @@
+:root {
+  --bg: #f6efe5;
+  --paper: rgba(255, 250, 242, 0.88);
+  --paper-strong: #fffaf2;
+  --ink: #211c17;
+  --muted: #68584c;
+  --accent: #9d4428;
+  --accent-deep: #6f2b16;
+  --line: rgba(79, 65, 54, 0.2);
+  --shadow: 0 24px 70px rgba(57, 34, 19, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at top left, rgba(157, 68, 40, 0.18), transparent 28rem),
+    radial-gradient(circle at top right, rgba(114, 64, 48, 0.12), transparent 22rem),
+    linear-gradient(180deg, #f8f2e9 0%, #f3ebdf 42%, #efe3d4 100%);
+  font-family: "IBM Plex Sans", sans-serif;
+}
+
+a {
+  color: var(--accent-deep);
+}
+
+.page-shell {
+  width: min(1180px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 2rem 0 4rem;
+}
+
+.hero {
+  margin: 1rem 0 2rem;
+  padding: 2.2rem;
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  background:
+    linear-gradient(135deg, rgba(255, 250, 242, 0.95), rgba(248, 238, 226, 0.86)),
+    #fffaf2;
+  box-shadow: var(--shadow);
+}
+
+.eyebrow {
+  margin: 0 0 0.8rem;
+  color: var(--accent);
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.hero h1,
+.essay h2,
+.note-card h2 {
+  font-family: "Fraunces", serif;
+}
+
+.hero h1 {
+  max-width: 13ch;
+  margin: 0;
+  font-size: clamp(2.5rem, 7vw, 5.5rem);
+  line-height: 0.95;
+}
+
+.lede {
+  max-width: 60rem;
+  margin: 1.4rem 0 0;
+  color: var(--muted);
+  font-size: 1.12rem;
+  line-height: 1.7;
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  margin-top: 1.6rem;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.85rem 1.15rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fffaf2;
+}
+
+.button.secondary {
+  background: rgba(255, 250, 242, 0.7);
+  color: var(--ink);
+}
+
+.content-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 18rem) minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.rail {
+  position: sticky;
+  top: 1rem;
+  display: grid;
+  gap: 1rem;
+}
+
+.note-card,
+.essay section {
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: var(--paper);
+  backdrop-filter: blur(10px);
+  box-shadow: var(--shadow);
+}
+
+.note-card {
+  padding: 1.1rem 1.15rem;
+}
+
+.note-card h2 {
+  margin: 0 0 0.6rem;
+  font-size: 1.1rem;
+}
+
+.note-card p,
+.note-card li {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.note-card ul {
+  padding-left: 1.15rem;
+  margin: 0;
+}
+
+.essay {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.essay section {
+  padding: 1.5rem 1.55rem;
+}
+
+.essay h2 {
+  margin: 0 0 0.8rem;
+  font-size: clamp(1.6rem, 3vw, 2.3rem);
+}
+
+.essay p,
+.essay li {
+  color: var(--ink);
+  font-size: 1rem;
+  line-height: 1.8;
+}
+
+.essay p {
+  margin: 0.8rem 0 0;
+}
+
+.essay ul {
+  margin: 0.9rem 0 0;
+  padding-left: 1.2rem;
+}
+
+.essay li + li {
+  margin-top: 0.35rem;
+}
+
+.checklist {
+  list-style: square;
+}
+
+.pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 0.8rem;
+  border-radius: 999px;
+  background: rgba(157, 68, 40, 0.1);
+  border: 1px solid rgba(157, 68, 40, 0.14);
+  color: var(--accent-deep);
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+pre.mermaid {
+  overflow-x: auto;
+  margin: 1.1rem 0 0;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--paper-strong);
+}
+
+.sources {
+  word-break: break-word;
+}
+
+code {
+  padding: 0.08rem 0.28rem;
+  border-radius: 0.35rem;
+  background: rgba(33, 28, 23, 0.08);
+  font-family: "IBM Plex Sans", sans-serif;
+  font-size: 0.95em;
+}
+
+@media (max-width: 900px) {
+  .content-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .rail {
+    position: static;
+  }
+
+  .hero {
+    padding: 1.5rem;
+  }
+
+  .essay section,
+  .note-card {
+    padding: 1.2rem;
+  }
+}
