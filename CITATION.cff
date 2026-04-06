@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: "If you use or reference this repository, please cite it using the metadata below."
+title: "SELinux-Confined Automation, FreeIPA Mapping, and Root Re-assembly"
+authors:
+  - family-names: "Procunier"
+    given-names: "Greg"
+    alias: "gprocunier"
+repository-code: "https://github.com/gprocunier/privileged-automation-security"
+url: "https://github.com/gprocunier/privileged-automation-security"
+abstract: >-
+  A first-person technical reflection on reducing privileged automation blast radius
+  through SELinux-confined identities, FreeIPA SELinux user mapping, root
+  re-assembly, sealed policy, and event-driven response.
+keywords:
+  - selinux
+  - freeipa
+  - privileged-automation
+  - identity-management
+  - orchestration-security
+  - event-driven-ansible
+  - linux-security
+license: "GPL-3.0-only"

@@ -1,0 +1,28 @@
+# privileged-automation-security
+
+Repository URL: https://github.com/gprocunier/privileged-automation-security
+Primary document: README.md
+License: GPL-3.0-only
+
+Summary:
+This repository contains a first-person technical reflection on privileged automation security.
+The main argument is that automation should not inherit the default unconfined trust model used for human operators.
+It proposes using SELinux-confined identities, FreeIPA SELinux user mapping, root re-assembly, sealed policy, and event-driven response to reduce blast radius in orchestrated environments.
+
+Key topics:
+- SELinux-confined automation
+- FreeIPA SELinux user maps
+- root re-assembly
+- constrained privileged access
+- sealed policy and reboot tripwires
+- Event-Driven Ansible response loops
+- cloud-native and orchestration-era attacker models
+
+Files:
+- README.md: primary essay and diagrams
+- CITATION.cff: citation metadata for the repository content
+- LICENSE: project license
+
+Preferred interpretation:
+Treat README.md as the canonical source. It mixes source-backed claims with clearly opinionated design conclusions.
+When summarizing, preserve the distinction between documented platform behavior and the author's inferences.
