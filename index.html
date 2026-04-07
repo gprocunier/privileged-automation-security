@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@500;700&family=Red+Hat+Text:wght@400;500;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@500;700&family=Red+Hat+Mono:wght@400;500&family=Red+Hat+Text:wght@400;500;700&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="./styles.css" />
@@ -91,6 +91,12 @@ flowchart LR
     C["FreeIPA&lt;br/&gt;maps identity to SELinux user by host scope"] --&gt; D["SSSD + pam_selinux&lt;br/&gt;evaluates map and starts session"]
     B --&gt; D
     D --&gt; E["Confined session"]
+    classDef brand fill:#fce3e3,stroke:#ee0000,color:#151515,stroke-width:1.5px;
+    classDef subtle fill:#f2f2f2,stroke:#c7c7c7,color:#151515,stroke-width:1.5px;
+    classDef neutral fill:#ffffff,stroke:#c7c7c7,color:#151515,stroke-width:1.5px;
+    class A,C brand;
+    class D subtle;
+    class B,E neutral;
             </pre>
           </section>
 
@@ -182,6 +188,12 @@ flowchart TB
         X
         K
     end
+    classDef brand fill:#fce3e3,stroke:#ee0000,color:#151515,stroke-width:1.5px;
+    classDef subtle fill:#f2f2f2,stroke:#c7c7c7,color:#151515,stroke-width:1.5px;
+    classDef neutral fill:#ffffff,stroke:#c7c7c7,color:#151515,stroke-width:1.5px;
+    class R brand;
+    class L,S,P neutral;
+    class N,X,K subtle;
             </pre>
           </section>
 
@@ -236,6 +248,12 @@ flowchart TD
     E --&gt;|no| F["Must weaken boot state or reboot"]
     F --&gt; G["Off-host telemetry records the event"]
     E --&gt;|yes| H["The design failed"]
+    classDef brand fill:#fce3e3,stroke:#ee0000,color:#151515,stroke-width:1.5px;
+    classDef subtle fill:#f2f2f2,stroke:#c7c7c7,color:#151515,stroke-width:1.5px;
+    classDef neutral fill:#ffffff,stroke:#c7c7c7,color:#151515,stroke-width:1.5px;
+    class A,F,H brand;
+    class D,G subtle;
+    class B,C,E neutral;
             </pre>
           </section>
 
@@ -263,6 +281,12 @@ flowchart LR
     E --&gt; G["Quarantine or isolate host"]
     E --&gt; H["Disable identity or revoke access"]
     E --&gt; I["Collect evidence or trigger remediation"]
+    classDef brand fill:#fce3e3,stroke:#ee0000,color:#151515,stroke-width:1.5px;
+    classDef subtle fill:#f2f2f2,stroke:#c7c7c7,color:#151515,stroke-width:1.5px;
+    classDef neutral fill:#ffffff,stroke:#c7c7c7,color:#151515,stroke-width:1.5px;
+    class C,E brand;
+    class B,D,F subtle;
+    class A,G,H,I neutral;
             </pre>
           </section>
 
@@ -310,15 +334,72 @@ flowchart LR
         startOnLoad: true,
         theme: "base",
         securityLevel: "loose",
+        flowchart: {
+          curve: "linear",
+          htmlLabels: true
+        },
         themeVariables: {
-          primaryColor: "#e9dcc7",
-          primaryTextColor: "#211c17",
-          primaryBorderColor: "#4f4136",
-          lineColor: "#4f4136",
-          secondaryColor: "#f4ead9",
-          tertiaryColor: "#fffaf2",
-          fontFamily: "IBM Plex Sans"
-        }
+          primaryColor: "#ffffff",
+          primaryTextColor: "#151515",
+          primaryBorderColor: "#c7c7c7",
+          lineColor: "#4d4d4d",
+          secondaryColor: "#f2f2f2",
+          secondaryTextColor: "#151515",
+          secondaryBorderColor: "#c7c7c7",
+          tertiaryColor: "#fce3e3",
+          tertiaryTextColor: "#151515",
+          tertiaryBorderColor: "#ee0000",
+          background: "#ffffff",
+          mainBkg: "#ffffff",
+          clusterBkg: "#ffffff",
+          clusterBorder: "#c7c7c7",
+          actorBkg: "#ffffff",
+          actorBorder: "#c7c7c7",
+          actorTextColor: "#151515",
+          labelBoxBkgColor: "#ffffff",
+          labelTextColor: "#151515",
+          edgeLabelBackground: "#ffffff",
+          signalColor: "#4d4d4d",
+          signalTextColor: "#151515",
+          noteBkgColor: "#f2f2f2",
+          noteBorderColor: "#c7c7c7",
+          noteTextColor: "#151515",
+          sequenceNumberColor: "#151515",
+          fontFamily: "Red Hat Text"
+        },
+        themeCSS: `
+          .node rect,
+          .node polygon,
+          .node path,
+          .node circle {
+            stroke-width: 1.5px;
+          }
+          .nodeLabel,
+          .label foreignObject div,
+          .edgeLabel {
+            font-family: 'Red Hat Text', Helvetica, Arial, sans-serif !important;
+            color: #151515 !important;
+          }
+          .cluster-label text,
+          .cluster-label span {
+            font-family: 'Red Hat Text', Helvetica, Arial, sans-serif !important;
+            font-weight: 500;
+            color: #151515 !important;
+          }
+          .edgePath .path,
+          .flowchart-link {
+            stroke: #4d4d4d !important;
+            stroke-width: 1.5px !important;
+            stroke-linecap: square;
+          }
+          .marker path {
+            fill: #4d4d4d !important;
+            stroke: #4d4d4d !important;
+          }
+          .actor {
+            stroke-width: 1.5px !important;
+          }
+        `
       });
     </script>
   </body>
