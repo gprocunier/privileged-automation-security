@@ -8,7 +8,7 @@ On RHEL, a lot of shipped software already benefits from targeted SELinux confin
 
 I do not want automation to inherit the same assumptions as a human operator and then move faster. I want automation to start constrained, and I want any movement out of that constraint to be narrow, deliberate, and visible.
 
-The shape of the design I have in mind is simple:
+The design is simple:
 - the endpoint carries the actual SELinux policy
 - FreeIPA maps named identities into those SELinux users and roles
 - SSSD and `pam_selinux` apply that mapping at login
@@ -27,7 +27,7 @@ That distinction matters. The FreeIPA and Red Hat IdM documentation describe SEL
 - a host or host group
 - or an HBAC-linked scope that provides the user and host side of the match
 
-I read that as a clean control-plane boundary. FreeIPA answers the question, "On this host, which SELinux user should this identity get?" It does not answer, "What is the SELinux policy for this host?" That second question belongs to the policy pipeline and the endpoint.
+That is a clean control-plane boundary. FreeIPA answers the question, "On this host, which SELinux user should this identity get?" It does not answer, "What is the SELinux policy for this host?" That second question belongs to the policy pipeline and the endpoint.
 
 SSSD evaluates the map on the client, and `pam_selinux` launches the session in the chosen context. Specificity and configured order matter. Direct user mappings beat group mappings. Direct host scope beats broader host-group scope. If nothing more specific matches, order and defaults decide what happens.
 
@@ -45,7 +45,7 @@ flowchart LR
 
 The default model assumes that it is acceptable to begin from a broadly trusted user context and rely on procedure to keep that trust from spreading too far.
 
-I do not think that assumption survives contact with modern automation.
+That assumption breaks down quickly in modern automation.
 
 If an automation identity is compromised, the problem is not just that it can do one local task incorrectly. The problem is that the identity often inherits a whole operator model:
 - broad shell access
@@ -61,7 +61,7 @@ Red Hat's own documentation already points to the gap. On one side, targeted SEL
 
 ## Why This Matters More Now
 
-I also think this needs to be understood as a response to a different class of attacker than the one a lot of operational models were built around.
+This is also a response to a different class of attacker than the one a lot of operational models were built around.
 
 The VoidLink reporting from Check Point Research is a useful marker for that shift. They describe it as a cloud-first Linux malware framework designed for modern infrastructure, with explicit awareness of major cloud environments, Kubernetes, and Docker, plus credential harvesting for cloud and version-control contexts. They also describe a broad plugin-based framework, multiple C2 channels, and strong operational security features. Their report does not literally say "this is an orchestration attack framework," but I think that is a fair directional inference from the cloud-native, container-aware design and the attention to software-engineer and infrastructure-adjacent credentials.
 
@@ -71,7 +71,7 @@ What matters is the change in assumptions this forces. If attackers are building
 
 I want a small set of organization-defined SELinux users and domains for automation. I want those shipped to the endpoints through a policy pipeline. I want FreeIPA to map identities into them. I want the baseline role to be function-specific and narrow.
 
-That means I would rather have a small taxonomy like this:
+I would rather use a small taxonomy like this:
 - `ops_inventory_u`
 - `ops_backup_u`
 - `ops_patch_u`
@@ -101,7 +101,7 @@ sequenceDiagram
 
 ## Root Re-assembly
 
-The other idea I want to push is that I do not think of `root` as a single thing anymore. I think of it as a bundle that can be split apart and reassembled under SELinux policy.
+I also do not think of `root` as a single thing anymore. I think of it as a bundle that can be split apart and reassembled under SELinux policy.
 
 What matters to me is not EUID 0 in the abstract. What matters is which powers are actually present in the SELinux domain wrapped around that process. Red Hat's confined administrator patterns are enough to show that Unix identity is not the whole story. SELinux context still matters when a session is performing root-like work.
 
@@ -139,8 +139,6 @@ I think this matters because too much automation today assumes that if something
 
 ## Why I Would Not Build This Around Shared Direct `root`
 
-There is an important control-plane distinction here.
-
 FreeIPA maps IdM identities. A literal shared local `root` account does not fit that model cleanly. I think the cleaner pattern is:
 - authenticate as a named automation identity
 - map that identity through FreeIPA into a confined SELinux user
@@ -152,7 +150,7 @@ If someone insists on direct shared `root` login everywhere, then most of the in
 
 ## Why This Matters for Ansible
 
-Ansible is a good example because it makes the tradeoff obvious.
+Ansible makes the tradeoff obvious.
 
 I want to be able to log into a host for automation, perform local administrative work, and still deny that session the ability to become a general-purpose jump point.
 
@@ -174,19 +172,17 @@ That is the blast radius reduction I am after.
 
 ## Sealed Policy and Reboot-as-Tripwire
 
-I also think this model gets more interesting when I stop at runtime confinement and ask a second question: what has to happen if someone wants to break out of it?
+SELinux alone does not give me a sealed anti-tamper story.
 
 On a stock RHEL system, `root` can still do things that matter here. It can change SELinux mode at runtime with `setenforce`. It can install or override policy modules with `semodule`. It can weaken SELinux at boot through configuration or kernel parameters such as `enforcing=0` or `selinux=0`.
 
-So I do not want to overclaim. SELinux by itself does not give me a sealed anti-tamper story.
-
-What I am proposing is stronger and more explicit than that:
+The model I am describing depends on something stronger:
 - runtime confinement comes from SELinux policy
 - anti-tamper value comes from treating production policy as sealed state
 - bypassing that seal should require a higher-friction action
 - the bypass event should be visible outside the host
 
-The reason the reboot angle works for me is that it is a reasonable tripwire. If the practical way to weaken or bypass the sealed runtime policy is to cross a boot-state boundary, then the attacker has to trade stealth for power. I can live with that if the event is visible off-host and the organization is prepared to react to it.
+The reboot path works as a reasonable tripwire. If the practical way to weaken or bypass the sealed runtime policy is to cross a boot-state boundary, then the attacker has to trade stealth for power. I can live with that if the event is visible off-host and the organization is prepared to react to it.
 
 ```mermaid
 flowchart TD
@@ -203,7 +199,7 @@ I do not need perfect prevention here. I need the cost of bypass to go up and th
 
 ## Why Event-Driven Response Matters
 
-I do not think the tripwire idea is complete if it ends at detection. If the seal-break event is visible outside the host, I want the rest of the system to react to it automatically. This is where Event-Driven Ansible becomes useful to me. Red Hat's Event-Driven Ansible model is built around rulebooks, decision environments, and controller integrations that react to incoming events and trigger automation in response.
+I do not think the tripwire idea is complete if it ends at detection. If the seal-break event is visible outside the host, I want the rest of the system to react to it automatically. This is where Event-Driven Ansible fits. Red Hat's Event-Driven Ansible model is built around rulebooks, decision environments, and controller integrations that react to incoming events and trigger automation in response.
 
 What I want is:
 - reboot events
@@ -232,7 +228,7 @@ flowchart LR
     E --> I["Collect evidence or trigger remediation"]
 ```
 
-That is how the tripwire stops being passive detection and becomes active containment.
+That turns the tripwire from passive detection into active containment.
 
 ## Guardrails
 
@@ -247,7 +243,7 @@ If I were trying to make this real, I would hold the line on a few things.
 
 ## How I Would Pilot It
 
-I would start small.
+I would stage this in small steps.
 
 First I would validate the mapping path with something like `ops_inventory_u` on a non-production host class. Then I would add a constrained write-capable role like `ops_deploy_u` for one application tier. Only after that would I pilot `ops_root_local_u` on a workflow that genuinely needs local root-equivalent behavior but does not need to pivot through the host.
 

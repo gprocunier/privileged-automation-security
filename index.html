@@ -103,7 +103,7 @@ flowchart LR
           <section>
             <h2>Why this matters more now</h2>
             <p>
-              This needs to be understood as a response to a different class of attacker than
+              This is also a response to a different class of attacker than
               the one a lot of operational models were built around. The VoidLink reporting from Check
               Point Research is a useful marker for that shift. They describe a cloud-first Linux
               malware framework designed for modern infrastructure, with explicit awareness of major
@@ -158,7 +158,7 @@ sequenceDiagram
           <section>
             <h2>Root re-assembly</h2>
             <p>
-              I do not think of <code>root</code> as a single thing anymore. I think of it as a
+              I also do not think of <code>root</code> as a single thing anymore. I think of it as a
               bundle that can be split apart and reassembled under SELinux policy. What matters to me
               is not EUID 0 in the abstract. What matters is which powers are actually present in the
               SELinux domain wrapped around that process.
@@ -228,13 +228,13 @@ flowchart TB
           <section>
             <h2>Sealed policy and reboot as tripwire</h2>
             <p>
-              I do not want to overclaim. SELinux by itself does not give me a sealed anti-tamper
-              story. On a stock RHEL system, <code>root</code> can still use
+              SELinux alone does not give me a sealed anti-tamper story. On a stock RHEL system,
+              <code>root</code> can still use
               <code>setenforce</code>, <code>semodule</code>, or boot-time parameters such as
               <code>enforcing=0</code> and <code>selinux=0</code> to weaken the boundary.
             </p>
             <p>
-              What I am proposing is stronger and more explicit than that: runtime confinement comes
+              The model I am describing depends on something stronger: runtime confinement comes
               from SELinux policy, anti-tamper value comes from treating production policy as sealed
               state, and bypassing that seal should require a higher-friction action that is visible
               outside the host.
@@ -262,7 +262,7 @@ flowchart TD
             <p>
               I do not think the tripwire idea is complete if it ends at detection. If the seal-break
               event is visible outside the host, I want the rest of the system to react to it
-              automatically. This is where Event-Driven Ansible becomes useful to me.
+              automatically. This is where Event-Driven Ansible fits.
             </p>
             <ul>
               <li>Reboot events.</li>
