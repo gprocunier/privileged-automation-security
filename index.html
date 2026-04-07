@@ -87,8 +87,8 @@
             </p>
             <pre class="mermaid">
 flowchart LR
-    A["Policy pipeline&lt;br/&gt;defines SELinux users, roles, domains, transitions"] --&gt; B["Managed endpoint&lt;br/&gt;policy installed locally"]
-    C["FreeIPA&lt;br/&gt;maps identity to SELinux user by host scope"] --&gt; D["SSSD + pam_selinux&lt;br/&gt;evaluates map and starts session"]
+    A["Policy pipeline"] --&gt; B["Managed endpoint"]
+    C["FreeIPA mapping"] --&gt; D["SSSD + pam_selinux"]
     B --&gt; D
     D --&gt; E["Confined session"]
     classDef brand fill:#fce3e3,stroke:#ee0000,color:#151515,stroke-width:1.5px;
@@ -141,16 +141,16 @@ flowchart LR
             </p>
             <pre class="mermaid">
 sequenceDiagram
-    participant I as Named automation identity
-    participant H as Target host
+    participant I as Automation identity
+    participant H as Host
     participant S as SSSD + pam_selinux
     participant F as FreeIPA or SSSD cache
-    participant P as Local SELinux policy
+    participant P as SELinux policy
 
     I-&gt;&gt;H: authenticate
     H-&gt;&gt;S: start session
-    S-&gt;&gt;F: resolve SELinux map
-    S-&gt;&gt;P: select valid local role/domain
+    S-&gt;&gt;F: resolve map
+    S-&gt;&gt;P: select context
     S--&gt;&gt;I: launch confined session
             </pre>
           </section>
@@ -170,12 +170,12 @@ sequenceDiagram
             </p>
             <pre class="mermaid">
 flowchart TB
-    R["Root-equivalent authority"] --&gt; L["Local file and process control"]
-    R --&gt; S["Service management"]
-    R --&gt; P["Package and label operations"]
-    R --&gt; N["Outbound network initiation"]
-    R --&gt; X["SSH pivot behavior"]
-    R --&gt; K["Access to remote trust material"]
+    R["Root-equivalent authority"] --&gt; L["Local files + processes"]
+    R --&gt; S["Service control"]
+    R --&gt; P["Package + label work"]
+    R --&gt; N["Outbound network"]
+    R --&gt; X["SSH pivoting"]
+    R --&gt; K["Remote trust material"]
 
     subgraph A[What I would allow in ops_root_local_t]
         L
@@ -241,12 +241,12 @@ flowchart TB
             </p>
             <pre class="mermaid">
 flowchart TD
-    A["Compromised automation identity&lt;br/&gt;EUID 0 in confined domain"] --&gt; B{"Desired action"}
-    B --&gt;|approved local work| C["Allowed inside policy"]
-    B --&gt;|network pivot or policy bypass| D["Denied by SELinux domain"]
-    D --&gt; E{"Can it quietly break the seal?"}
-    E --&gt;|no| F["Must weaken boot state or reboot"]
-    F --&gt; G["Off-host telemetry records the event"]
+    A["Confined EUID 0 session"] --&gt; B{"Requested action"}
+    B --&gt;|approved local work| C["Allowed"]
+    B --&gt;|pivot or bypass attempt| D["Denied"]
+    D --&gt; E{"Can it break the seal quietly?"}
+    E --&gt;|no| F["Weaken boot state or reboot"]
+    F --&gt; G["Off-host telemetry"]
     E --&gt;|yes| H["The design failed"]
     classDef brand fill:#fce3e3,stroke:#ee0000,color:#151515,stroke-width:1.5px;
     classDef subtle fill:#f2f2f2,stroke:#c7c7c7,color:#151515,stroke-width:1.5px;
@@ -273,14 +273,14 @@ flowchart TD
             <p>Those should become event sources for response automation.</p>
             <pre class="mermaid">
 flowchart LR
-    A["Managed host&lt;br/&gt;reboot / SELinux state change / audit event"] --&gt; B["Off-host telemetry&lt;br/&gt;logging, SIEM, event stream"]
-    B --&gt; C["Event-Driven Ansible&lt;br/&gt;rulebook activation"]
-    C --&gt; D{"Tripwire rule matches?"}
-    D --&gt;|yes| E["Launch response workflow"]
+    A["Host event"] --&gt; B["Off-host telemetry"]
+    B --&gt; C["EDA rulebook"]
+    C --&gt; D{"Tripwire match?"}
+    D --&gt;|yes| E["Response workflow"]
     D --&gt;|no| F["Keep monitoring"]
-    E --&gt; G["Quarantine or isolate host"]
-    E --&gt; H["Disable identity or revoke access"]
-    E --&gt; I["Collect evidence or trigger remediation"]
+    E --&gt; G["Quarantine host"]
+    E --&gt; H["Disable identity"]
+    E --&gt; I["Collect evidence"]
     classDef brand fill:#fce3e3,stroke:#ee0000,color:#151515,stroke-width:1.5px;
     classDef subtle fill:#f2f2f2,stroke:#c7c7c7,color:#151515,stroke-width:1.5px;
     classDef neutral fill:#ffffff,stroke:#c7c7c7,color:#151515,stroke-width:1.5px;
