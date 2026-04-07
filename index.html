@@ -6,7 +6,7 @@
     <title>Privileged Automation Security</title>
     <meta
       name="description"
-      content="A first-person reflection on SELinux-confined automation, FreeIPA mapping, root re-assembly, and tripwire-driven response for orchestrated environments."
+      content="An essay on SELinux-confined automation, FreeIPA mapping, root re-assembly, and tripwire-driven response for orchestrated environments."
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -38,7 +38,7 @@
           <span class="topic-chip">Event-Driven Ansible</span>
         </div>
         <p class="lede">
-          This repository is my attempt to work through that claim in concrete terms: FreeIPA as the
+          This essay works through that claim in concrete terms: FreeIPA as the
           mapping plane, SELinux as the runtime boundary, root re-assembled instead of ambient, and
           tripwires that can trigger automated response when someone tries to break the seal.
         </p>
@@ -51,7 +51,7 @@
       <main class="content-grid">
         <div class="essay">
           <section>
-            <h2>What I am arguing</h2>
+            <h2>The argument</h2>
             <p>
               I think the default trust model for automation is wrong. On RHEL, a lot of shipped
               software already benefits from targeted SELinux confinement, but logged-in users are
@@ -74,7 +74,7 @@
           </section>
 
           <section>
-            <h2>What FreeIPA actually gives me</h2>
+            <h2>What FreeIPA actually gives</h2>
             <p>
               I do not think FreeIPA is the place to author SELinux policy. I think it is the right
               place to map identity into policy that already exists on the endpoints. FreeIPA answers
@@ -82,8 +82,8 @@
               answer, “What is the SELinux policy for this host?”
             </p>
             <p>
-              That is enough centralization for me. I do not need FreeIPA to become a policy engine.
-              I need it to become the place where identity lands in the right confinement at scale.
+              That is enough centralization. FreeIPA does not need to become a policy engine.
+              I need it to be the place where identity lands in the right confinement at scale.
             </p>
             <pre class="mermaid">
 flowchart LR
@@ -101,9 +101,9 @@ flowchart LR
           </section>
 
           <section>
-            <h2>Why I think this matters more now</h2>
+            <h2>Why this matters more now</h2>
             <p>
-              I think this needs to be understood as a response to a different class of attacker than
+              This needs to be understood as a response to a different class of attacker than
               the one a lot of operational models were built around. The VoidLink reporting from Check
               Point Research is a useful marker for that shift. They describe a cloud-first Linux
               malware framework designed for modern infrastructure, with explicit awareness of major
@@ -112,14 +112,14 @@ flowchart LR
             </p>
             <p>
               Their report does not literally say “this is an orchestration attack framework,” and I
-              do not want to overstate it. But I do think it is a fair inference that cloud-native,
+              do not want to overstate it. But I think it is a fair inference that cloud-native,
               container-aware attacker tooling changes how I should think about automation paths,
               control-plane hosts, and privileged identities.
             </p>
           </section>
 
           <section>
-            <h2>The model I want instead</h2>
+            <h2>The model I want</h2>
             <p>
               I want a small set of organization-defined SELinux users and domains for automation. I
               want those shipped to the endpoints through a policy pipeline. I want FreeIPA to map

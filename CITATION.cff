@@ -8,7 +8,7 @@ authors:
 repository-code: "https://github.com/gprocunier/privileged-automation-security"
 url: "https://github.com/gprocunier/privileged-automation-security"
 abstract: >-
-  A first-person technical reflection on reducing privileged automation blast radius
+  An essay on reducing privileged automation blast radius
   through SELinux-confined identities, FreeIPA SELinux user mapping, root
   re-assembly, sealed policy, and event-driven response.
 keywords:

@@ -5,9 +5,9 @@ Primary document: README.md
 License: GPL-3.0-only
 
 Summary:
-This repository contains a first-person technical reflection on privileged automation security.
+This repository contains an essay on privileged automation security.
 The main argument is that automation should not inherit the default unconfined trust model used for human operators.
-It proposes using SELinux-confined identities, FreeIPA SELinux user mapping, root re-assembly, sealed policy, and event-driven response to reduce blast radius in orchestrated environments.
+It argues for using SELinux-confined identities, FreeIPA SELinux user mapping, root re-assembly, sealed policy, and event-driven response to reduce blast radius in orchestrated environments.
 
 Key topics:
 - SELinux-confined automation

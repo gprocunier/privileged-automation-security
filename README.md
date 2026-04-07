@@ -1,12 +1,12 @@
 # SELinux-Confined Automation, FreeIPA Mapping, and Root Re-assembly
 
-## What I Am Arguing
+## The Argument
 
 I think the default trust model for automation is wrong.
 
 On RHEL, a lot of shipped software already benefits from targeted SELinux confinement, but logged-in users are still unconfined by default and typically map to `unconfined_u`. I do not think that model scales well for orchestration. It makes sense for a person at a shell who is expected to improvise, inspect, and recover. It makes much less sense for automation, where the normal pattern is to start with broad trust and then pivot through `sudo`, SSH, and existing credentials.
 
-That is the part I want to challenge. I do not want automation to inherit the same assumptions as a human operator and then move faster. I want automation to start constrained, and I want any movement out of that constraint to be narrow, deliberate, and visible.
+I do not want automation to inherit the same assumptions as a human operator and then move faster. I want automation to start constrained, and I want any movement out of that constraint to be narrow, deliberate, and visible.
 
 The shape of the design I have in mind is simple:
 - the endpoint carries the actual SELinux policy
@@ -17,7 +17,7 @@ The shape of the design I have in mind is simple:
 
 I think that is a better model for modern automation than treating orchestration as an unconfined person with faster hands.
 
-## What FreeIPA Actually Gives Me
+## What FreeIPA Actually Gives
 
 I do not think FreeIPA is the place to author SELinux policy. I think it is the right place to map identity into policy that already exists on the endpoints.
 
@@ -31,7 +31,7 @@ I read that as a clean control-plane boundary. FreeIPA answers the question, "On
 
 SSSD evaluates the map on the client, and `pam_selinux` launches the session in the chosen context. Specificity and configured order matter. Direct user mappings beat group mappings. Direct host scope beats broader host-group scope. If nothing more specific matches, order and defaults decide what happens.
 
-That is enough centralization for me. I do not need FreeIPA to become a policy engine. I need it to become the place where identity lands in the right confinement at scale.
+That is enough centralization. FreeIPA does not need to become a policy engine. I need it to be the place where identity lands in the right confinement at scale.
 
 ```mermaid
 flowchart LR
@@ -41,7 +41,7 @@ flowchart LR
     D --> E["Confined session"]
 ```
 
-## Where I Think the Default Model Breaks Down
+## Where the Default Model Breaks Down
 
 The default model assumes that it is acceptable to begin from a broadly trusted user context and rely on procedure to keep that trust from spreading too far.
 
@@ -59,15 +59,15 @@ That is too much ambient authority.
 
 Red Hat's own documentation already points to the gap. On one side, targeted SELinux is doing real work for services. On the other side, interactive user sessions are usually unconfined. I think automation has been living on the wrong side of that line.
 
-## Why I Think This Matters More Now
+## Why This Matters More Now
 
 I also think this needs to be understood as a response to a different class of attacker than the one a lot of operational models were built around.
 
 The VoidLink reporting from Check Point Research is a useful marker for that shift. They describe it as a cloud-first Linux malware framework designed for modern infrastructure, with explicit awareness of major cloud environments, Kubernetes, and Docker, plus credential harvesting for cloud and version-control contexts. They also describe a broad plugin-based framework, multiple C2 channels, and strong operational security features. Their report does not literally say "this is an orchestration attack framework," but I think that is a fair directional inference from the cloud-native, container-aware design and the attention to software-engineer and infrastructure-adjacent credentials.
 
-What matters to me is the thought pattern this forces. If attackers are building cloud-first, modular, rapidly evolving tooling for Linux infrastructure, then I do not think it is enough to harden only the network edge and trust orchestration once it is inside. I think I need to assume that automation identities, orchestration paths, and control-plane hosts are part of the attack surface. In that world, reducing pivot rights and re-assembling root inside confinement stops being an academic design preference and starts looking like a practical response to how the threat is evolving.
+What matters is the change in assumptions this forces. If attackers are building cloud-first, modular, rapidly evolving tooling for Linux infrastructure, then I do not think it is enough to harden only the network edge and trust orchestration once it is inside. I need to assume that automation identities, orchestration paths, and control-plane hosts are part of the attack surface. In that world, reducing pivot rights and re-assembling root inside confinement stops looking academic and starts looking practical.
 
-## The Model I Want Instead
+## The Model I Want
 
 I want a small set of organization-defined SELinux users and domains for automation. I want those shipped to the endpoints through a policy pipeline. I want FreeIPA to map identities into them. I want the baseline role to be function-specific and narrow.
 
@@ -111,7 +111,7 @@ I want to be able to say that an automation role has local root-equivalent power
 - access to every secret or agent socket on the node
 - a free path to turn one compromise into fleet movement
 
-That is what I mean by root re-assembly. Local administrative power, network initiation, pivot behavior, and tamper capability are separate grants.
+That is the split I care about. Local administrative power, network initiation, pivot behavior, and tamper capability are separate grants.
 
 ```mermaid
 flowchart TB
@@ -186,7 +186,7 @@ What I am proposing is stronger and more explicit than that:
 - bypassing that seal should require a higher-friction action
 - the bypass event should be visible outside the host
 
-The reason I like the reboot angle is that it is a reasonable tripwire. If the practical way to weaken or bypass the sealed runtime policy is to cross a boot-state boundary, then the attacker has to trade stealth for power. I can live with that if the event is visible off-host and the organization is prepared to react to it.
+The reason the reboot angle works for me is that it is a reasonable tripwire. If the practical way to weaken or bypass the sealed runtime policy is to cross a boot-state boundary, then the attacker has to trade stealth for power. I can live with that if the event is visible off-host and the organization is prepared to react to it.
 
 ```mermaid
 flowchart TD
@@ -234,7 +234,7 @@ flowchart LR
 
 That is how the tripwire stops being passive detection and becomes active containment.
 
-## What I Think the Guardrails Need to Be
+## Guardrails
 
 If I were trying to make this real, I would hold the line on a few things.
 
@@ -262,7 +262,7 @@ I would leave break-glass and broader networked root-equivalent roles for later.
 
 I do not think the right question is whether SELinux can make automation perfectly safe. I think the right question is whether it can force automation into a much narrower and more legible trust model.
 
-I think it can. FreeIPA gives me the mapping layer. Endpoint policy gives me the enforcement boundary. SELinux gives me a way to break root into pieces instead of treating it as a total trust state. Sealing and off-host telemetry make bypass visible. Event-Driven Ansible gives me a way to respond when that tripwire fires.
+I think it can. FreeIPA provides the mapping layer. Endpoint policy provides the enforcement boundary. SELinux gives me a way to break root into pieces instead of treating it as a total trust state. Sealing and off-host telemetry make bypass visible. Event-Driven Ansible gives me a way to respond when that tripwire fires.
 
 That combination feels much closer to the model I want than the one I inherited.
 
